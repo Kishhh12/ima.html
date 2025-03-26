@@ -1,71 +1,919 @@
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            // Fake generated image URL (replace with real API response)
-            const generatedImageUrl = `https://via.placeholder.com/512?text=${encodeURIComponent(prompt)}`;
-
-            // Hide loading state and show generated image
-            loadingSpinner.style.display = 'none';
-            generatedImage.src = generatedImageUrl;
-            generatedImage.style.display = 'block';
-            generatedImage.classList.add('fade-in');
-
-            // Enable action buttons
-            downloadBtn.disabled = false;
-            shareBtn.disabled = false;
-            regenerateBtn.disabled = false;
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '<i class="fas fa-magic"></i> Generate';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImaginAI - Transform Text to Stunning AI Art</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6e48aa;
+            --primary-dark: #4a2d7a;
+            --secondary: #9d50bb;
+            --accent: #4cc9f0;
+            --dark: #1a1a2e;
+            --darker: #0d0d1a;
+            --light: #f8f9fa;
+            --lighter: #ffffff;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --border-radius: 16px;
+            --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        // Event listener for generate button
-        generateBtn.addEventListener('click', () => {
-            const prompt = promptInput.value.trim();
-            const style = styleSelect.value;
-            const size = sizeSelect.value;
-            const quality = qualitySelect.value;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
 
-            if (!prompt) {
-                alert('Please enter a description to generate an image.');
-                return;
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 600;
+            src: url(https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiA.woff2) format('woff2');
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--lighter);
+            text-decoration: none;
+        }
+
+        .logo i {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-button {
+            background: var(--accent);
+            color: var(--darker);
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(76, 201, 240, 0.4);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            aspect-ratio: 1/1;
+            transition: var(--transition);
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            padding: 4rem 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 70% 30%, rgba(110, 72, 170, 0.2) 0%, rgba(26, 26, 46, 0) 50%);
+            z-index: -1;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            line-height: 1.2;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 600px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .hero-image {
+            position: relative;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-badge {
+            position: absolute;
+            bottom: -1rem;
+            right: -1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            box-shadow: var(--box-shadow);
+            transform: rotate(5deg);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 2rem;
+            background: linear-gradient(to bottom, var(--dark), var(--darker));
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--accent), var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .section-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--box-shadow);
+            border-color: var(--accent);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 6rem 2rem;
+            background: var(--darker);
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            counter-reset: step-counter;
+        }
+
+        .step {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            position: relative;
+            padding-left: 5rem;
+        }
+
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .step-description {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Gallery Section */
+        .gallery {
+            padding: 6rem 2rem;
+            background: linear-gradient(to bottom, var(--darker), var(--dark));
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            position: relative;
+            aspect-ratio: 1/1;
+            background: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-item .prompt-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 1.5rem;
+            color: white;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .gallery-item:hover .prompt-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .prompt-overlay p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            text-align: center;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: clamp(1.8rem, 3vw, 2.5rem);
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .cta-description {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            color: var(--light);
+            font-size: 1.2rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--darker);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 3rem;
             }
 
-            generateAIImage(prompt, style, size, quality);
+            .hero-text {
+                text-align: center;
+                align-items: center;
+            }
+
+            .hero-cta {
+                justify-content: center;
+            }
+
+            .hero-image {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: fixed;
+                top: 80px;
+                left: 0;
+                right: 0;
+                background: var(--darker);
+                flex-direction: column;
+                padding: 2rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .hero {
+                padding: 2rem 1rem;
+            }
+
+            .features, .how-it-works, .gallery, .cta-section {
+                padding: 4rem 1rem;
+            }
+
+            .step {
+                padding-left: 4rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-cta {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .hero-cta .cta-button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .step {
+                flex-direction: column;
+                gap: 1rem;
+                padding-left: 0;
+                padding-top: 4rem;
+            }
+
+            .step::before {
+                top: 0;
+                left: 0;
+            }
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 1s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="#" class="logo">
+                <i class="fas fa-robot"></i>
+                <span>ImaginAI</span>
+            </a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#gallery">Gallery</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#" class="cta-button">Try Now</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">Transform Your Words Into Stunning AI Art</h1>
+                    <p class="hero-subtitle">Create breathtaking images from text descriptions with our cutting-edge AI technology. No design skills required - just your imagination!</p>
+                    <div class="hero-cta">
+                        <a href="#" class="cta-button">Start Creating Free</a>
+                        <a href="#how-it-works" class="cta-button" style="background: transparent; border: 2px solid var(--accent); color: var(--accent);">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-image floating">
+                    <img src="https://source.unsplash.com/random/600x600/?ai,art" alt="AI generated art example">
+                    <div class="image-badge">Generated with "Majestic cyberpunk cityscape at night"</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="section-header fade-in">
+                <h2 class="section-title">Powerful Features</h2>
+                <p class="section-subtitle">Discover what makes our AI image generator stand out from the rest</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in" style="animation-delay: 0.1s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Lightning Fast Generation</h3>
+                    <p class="feature-description">Create high-quality images in seconds with our optimized AI models. No more waiting hours for your artwork.</p>
+                </div>
+                <div class="feature-card fade-in" style="animation-delay: 0.2s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3 class="feature-title">Multiple Art Styles</h3>
+                    <p class="feature-description">Choose from 20+ art styles including realistic, anime, cyberpunk, watercolor and more.</p>
+                </div>
+                <div class="feature-card fade-in" style="animation-delay: 0.3s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-expand"></i>
+                    </div>
+                    <h3 class="feature-title">High Resolution Output</h3>
+                    <p class="feature-description">Generate images up to 4K resolution with our advanced upscaling technology.</p>
+                </div>
+                <div class="feature-card fade-in" style="animation-delay: 0.4s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3 class="feature-title">Smart Prompt Assistant</h3>
+                    <p class="feature-description">Our AI helps craft perfect prompts to get exactly the image you envision.</p>
+                </div>
+                <div class="feature-card fade-in" style="animation-delay: 0.5s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Collaborative Workspace</h3>
+                    <p class="feature-description">Share and collaborate on projects with your team in real-time.</p>
+                </div>
+                <div class="feature-card fade-in" style="animation-delay: 0.6s;">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3 class="feature-title">Version History</h3>
+                    <p class="feature-description">Access all your previous generations and variations with one click.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="how-it-works" id="how-it-works">
+            <div class="section-header fade-in">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Creating stunning AI art has never been easier</p>
+            </div>
+            <div class="steps">
+                <div class="step fade-in">
+                    <div class="step-content">
+                        <h3 class="step-title">Describe Your Vision</h3>
+                        <p class="step-description">Type a text description of what you want to create. Be as detailed or as simple as you like - our AI understands both!</p>
+                    </div>
+                </div>
+                <div class="step fade-in" style="animation-delay: 0.1s;">
+                    <div class="step-content">
+                        <h3 class="step-title">Customize Your Settings</h3>
+                        <p class="step-description">Choose your preferred art style, image size, and quality level. Our advanced options let you fine-tune every detail.</p>
+                    </div>
+                </div>
+                <div class="step fade-in" style="animation-delay: 0.2s;">
+                    <div class="step-content">
+                        <h3 class="step-title">Generate Your Art</h3>
+                        <p class="step-description">Click the generate button and watch as our AI brings your imagination to life in seconds.</p>
+                    </div>
+                </div>
+                <div class="step fade-in" style="animation-delay: 0.3s;">
+                    <div class="step-content">
+                        <h3 class="step-title">Refine & Download</h3>
+                        <p class="step-description">Make adjustments, create variations, and download your perfect artwork in high resolution.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section class="gallery" id="gallery">
+            <div class="section-header fade-in">
+                <h2 class="section-title">Community Gallery</h2>
+                <p class="section-subtitle">See what others have created with our AI art generator</p>
+            </div>
+            <div class="gallery-grid">
+                <div class="gallery-item fade-in">
+                    <img src="https://source.unsplash.com/random/600x600/?fantasy,landscape" loading="lazy" alt="AI generated fantasy landscape">
+                    <div class="prompt-overlay">
+                        <p>"Enchanted forest with glowing mushrooms and fairies, digital art style"</p>
+                    </div>
+                </div>
+                <div class="gallery-item fade-in" style="animation-delay: 0.1s;">
+                    <img src="https://source.unsplash.com/random/600x600/?cyberpunk,city" loading="lazy" alt="AI generated cyberpunk city">
+                    <div class="prompt-overlay">
+                        <p>"Neon-lit cyberpunk city at night with flying cars, 4k ultra detailed"</p>
+                    </div>
+                </div>
+                <div class="gallery-item fade-in" style="animation-delay: 0.2s;">
+                    <img src="https://source.unsplash.com/random/600x600/?portrait,anime" loading="lazy" alt="AI generated anime portrait">
+                    <div class="prompt-overlay">
+                        <p>"Anime girl with blue hair and futuristic armor, studio ghibli style"</p>
+                    </div>
+                </div>
+                <div class="gallery-item fade-in" style="animation-delay: 0.3s;">
+                    <img src="https://source.unsplash.com/random/600x600/?watercolor,animal" loading="lazy" alt="AI generated watercolor painting">
+                    <div class="prompt-overlay">
+                        <p>"Watercolor painting of a fox in autumn forest, impressionist style"</p>
+                    </div>
+                </div>
+                <div class="gallery-item fade-in" style="animation-delay: 0.4s;">
+                    <img src="https://source.unsplash.com/random/600x600/?sci-fi,spaceship" loading="lazy" alt="AI generated sci-fi scene">
+                    <div class="prompt-overlay">
+                        <p>"Futuristic spaceship orbiting an alien planet, cinematic lighting"</p>
+                    </div>
+                </div>
+                <div class="gallery-item fade-in" style="animation-delay: 0.5s;">
+                    <img src="https://source.unsplash.com/random/600x600/?steampunk,machine" loading="lazy" alt="AI generated steampunk machine">
+                    <div class="prompt-overlay">
+                        <p>"Intricate steampunk flying machine with brass gears, highly detailed"</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section fade-in">
+            <div class="cta-container">
+                <h2 class="cta-title">Ready to Unleash Your Creativity?</h2>
+                <p class="cta-description">Join thousands of artists, designers, and creators who are transforming their ideas into stunning visuals with our AI art generator.</p>
+                <a href="#" class="cta-button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-magic"></i> Start Creating Free
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>ImaginAI</h3>
+                <p style="color: rgba(255,255,255,0.7); margin-top: 1rem;">Transforming ideas into stunning visuals with the power of AI.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Product</h3>
+                <div class="footer-links">
+                    <a href="#">Features</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Gallery</a>
+                    <a href="#">API</a>
+                    <a href="#">Apps</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Resources</h3>
+                <div class="footer-links">
+                    <a href="#">Documentation</a>
+                    <a href="#">Tutorials</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Community</a>
+                    <a href="#">Prompt Guide</a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Company</h3>
+                <div class="footer-links">
+                    <a href="#">About Us</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            &copy; 2023 ImaginAI Technologies. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            mobileMenuBtn.setAttribute('aria-expanded', navLinks.classList.contains('active'));
         });
 
-        // Event listener for regenerate button
-        regenerateBtn.addEventListener('click', () => {
-            generateBtn.click();
-        });
-
-        // Event listener for download button
-        downloadBtn.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.href = generatedImage.src;
-            link.download = 'generated-ai-image.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-
-        // Event listener for share button
-        shareBtn.addEventListener('click', async () => {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'Check out my AI-generated art!',
-                        text: `Here's an AI-generated image based on: "${promptInput.value}"`,
-                        url: generatedImage.src
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
                     });
-                } catch (error) {
-                    console.error('Error sharing:', error);
+                    
+                    // Close mobile menu if open
+                    if (navLinks.classList.contains('active')) {
+                        navLinks.classList.remove('active');
+                        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                    }
                 }
-            } else {
-                alert('Sharing is not supported on this browser.');
-            }
+            });
         });
 
-        // Load gallery on page load
-        document.addEventListener('DOMContentLoaded', loadGallery);
+        // Animation on scroll
+        const fadeElements = document.querySelectorAll('.fade-in');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        fadeElements.forEach(element => {
+            element.style.opacity = 0;
+            element.style.transform = 'translateY(20px)';
+            element.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            observer.observe(element);
+        });
+
+        // Lazy loading for images
+        if ('loading' in HTMLImageElement.prototype) {
+            // Native lazy loading is supported
+            const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+            lazyImages.forEach(img => {
+                img.src = img.dataset.src;
+            });
+        } else {
+            // Fallback for browsers without native lazy loading
+            const lazyLoadObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        lazyLoadObserver.unobserve(img);
+                    }
+                });
+            });
+
+            const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+            lazyImages.forEach(img => {
+                lazyLoadObserver.observe(img);
+            });
+        }
     </script>
 </body>
 </html>
